@@ -7,6 +7,7 @@
 
 import Foundation
 import UIKit
+import Nuke // Import Nuke
 
 class PostTableViewCell: UITableViewCell {
     @IBOutlet weak var postImageView: UIImageView!
@@ -64,48 +65,49 @@ class PostTableViewCell: UITableViewCell {
             tagsLabel.text = ""
         }
         
-        // Load image
+        // Load image using Nuke
         print("📸 Post ID \(post.id) has \(post.photos.count) photos")
 
         if let photo = post.photos.first {
             let url = photo.originalSize.url
             print("🔗 Attempting to load image from URL: \(url)")
-            loadImage(from: url)
+            // Use Nuke for image loading
+            Nuke.loadImage(with: URL(string: url)!, into: postImageView)
         } else {
             print("🚫 No photos found for Post ID \(post.id)")
             postImageView.image = UIImage(systemName: "photo.fill") // fallback icon
         }
-
     }
     
     private func stripHTMLTags(from string: String) -> String {
         return string.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression, range: nil)
     }
     
-    private func loadImage(from urlString: String) {
-        postImageView.image = UIImage(systemName: "photo") // Reset
-
-        guard let url = URL(string: urlString) else {
-            print("❌ Invalid URL: \(urlString)")
-            return
-        }
-
-        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
-            if let error = error {
-                print("❌ Error loading image: \(error.localizedDescription)")
-                return
-            }
-
-            guard let data = data, let image = UIImage(data: data) else {
-                print("⚠️ No image data received or failed to convert to UIImage.")
-                return
-            }
-
-            DispatchQueue.main.async {
-                self?.postImageView.image = image
-            }
-        }.resume()
-    }
+    // Remove the manual loadImage function if you're now using Nuke.
+    // private func loadImage(from urlString: String) {
+    //     postImageView.image = UIImage(systemName: "photo") // Reset
+    //
+    //     guard let url = URL(string: urlString) else {
+    //         print("❌ Invalid URL: \(urlString)")
+    //         return
+    //     }
+    //
+    //     URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+    //         if let error = error {
+    //             print("❌ Error loading image: \(error.localizedDescription)")
+    //             return
+    //         }
+    //
+    //         guard let data = data, let image = UIImage(data: data) else {
+    //             print("⚠️ No image data received or failed to convert to UIImage.")
+    //             return
+    //         }
+    //
+    //         DispatchQueue.main.async {
+    //             self?.postImageView.image = image
+    //         }
+    //     }.resume()
+    // }
 
     
     private func formatDate(_ dateString: String) -> String {

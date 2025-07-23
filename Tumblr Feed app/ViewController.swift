@@ -9,6 +9,7 @@
 
 import Foundation
 import UIKit
+import Nuke // Make sure Nuke is imported if you're using it here too
 
 class ViewController: UIViewController {
     
@@ -23,6 +24,14 @@ class ViewController: UIViewController {
         setupUI()
         setupTableView()
         fetchPosts()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // This ensures the row is deselected when returning from the detail view
+        if let selectedIndexPath = tableView.indexPathForSelectedRow {
+            tableView.deselectRow(at: selectedIndexPath, animated: true)
+        }
     }
     
     private func setupUI() {
@@ -43,9 +52,9 @@ class ViewController: UIViewController {
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 200
         
-        // Register the custom cell
-//        let nib = UINib(nibName: "PostTableViewCell", bundle: nil)
-//        tableView.register(nib, forCellReuseIdentifier: "PostCell")
+        // Register the custom cell (uncomment if you have a custom PostTableViewCell.xib)
+        let nib = UINib(nibName: "PostTableViewCell", bundle: nil)
+        tableView.register(nib, forCellReuseIdentifier: "PostCell")
         
         // Add refresh control
         let refreshControl = UIRefreshControl()
@@ -105,6 +114,23 @@ class ViewController: UIViewController {
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }
+    
+    // MARK: - Navigation
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        // Check if the segue is the one leading to the DetailViewController
+        if segue.identifier == "showDetail" {
+            // Get the destination view controller and cast it to DetailViewController
+            if let detailVC = segue.destination as? DetailViewController {
+                // Get the index path of the selected row
+                if let indexPath = tableView.indexPathForSelectedRow {
+                    // Get the post associated with the selected row
+                    let selectedPost = posts[indexPath.row]
+                    // Set the post property on the DetailViewController
+                    detailVC.post = selectedPost
+                }
+            }
+        }
+    }
 }
 
 // MARK: - Table View Data Source
@@ -128,7 +154,9 @@ extension ViewController: UITableViewDataSource {
 // MARK: - Table View Delegate
 extension ViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
+        // Perform the segue when a row is selected
+        performSegue(withIdentifier: "showDetail", sender: nil)
+        // tableView.deselectRow(at: indexPath, animated: true) // No need to deselect here, will do in viewWillAppear
         let post = posts[indexPath.row]
         print("Selected post: \(post.id)")
     }
@@ -149,4 +177,3 @@ extension ViewController: UITableViewDelegate {
     }
     
 }
-    
