@@ -107,7 +107,7 @@ class PostTableViewCell: UITableViewCell {
     //             self?.postImageView.image = image
     //         }
     //     }.resume()
-    // }
+    // } 
 
     
     private func formatDate(_ dateString: String) -> String {
