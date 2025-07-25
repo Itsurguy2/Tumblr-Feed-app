@@ -2,18 +2,26 @@
 
 Submitted by: **Jesse Rosenthal**
 
-**Tuble feed app** is an app that ... [TODO] 
+**Tumblr Feed App - Fresh Content at Your Fingertips**
+This is an app that brings you inspiring stories and photos from Humans of New York's Tumblr blog with a refreshing twist.
+Key Features:
+📱 Browse Stories: View beautiful photos paired with heartfelt captions and personal stories from real people in New York City.
+🔄 Pull-to-Refresh Magic: Simply pull down on the screen to instantly load completely different posts - no more seeing the same content twice! Each refresh brings you photos and stories from different time periods.
+📖 Detailed View: Tap any post to see the full-sized image and complete story in a dedicated detail screen.
+✨ Fresh Content Always: Our smart refresh system uses random sampling to ensure you discover new stories every time you use the app, making each session feel like opening a surprise gift.
+🎨 Clean Design: Enjoy a modern, easy-to-read interface with smooth animations and visual feedback that lets you know when new content has loaded.
+Perfect for anyone who loves authentic human stories, street photography, or just wants to be inspired by the diverse experiences of New Yorkers. Every pull brings new faces, new stories, and new perspectives right to your phone.
 
-Time spent: **10** hours spent in total
+Time spent: **15** hours spent in total
 
 ## Required Features
 
 The following **required** functionality is completed:
 
 - [X] Setup navigation to the Detail Screen
-- [ ] Created the Detail View UI
-- [ ] Add the ability to pass data to the Detail View Controller
-- [ ] Made personal finishing touches to the UI
+- [X] Created the Detail View UI
+- [X] Add the ability to pass data to the Detail View Controller
+- [X] Made personal finishing touches to the UI
 
 
 The following **additional** features are implemented:
