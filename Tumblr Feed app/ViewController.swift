@@ -9,7 +9,7 @@
 
 import Foundation
 import UIKit
-import Nuke // Make sure Nuke is imported if you're using it here too
+import Nuke
 
 class ViewController: UIViewController {
     
@@ -17,10 +17,11 @@ class ViewController: UIViewController {
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
     private var posts: [Post] = []
-    private let apiKey = "mu07QNnIbkaqlpUZIepDPeclEhzQDGkURRcFs4AxEZIeNac35n" // Replace with your API key
+    private let apiKey = "mu07QNnIbkaqlpUZIepDPeclEhzQDGkURRcFs4AxEZIeNac35n"
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        print("🚀 ViewController viewDidLoad called")
         setupUI()
         setupTableView()
         fetchPosts()
@@ -28,38 +29,58 @@ class ViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        // This ensures the row is deselected when returning from the detail view
         if let selectedIndexPath = tableView.indexPathForSelectedRow {
             tableView.deselectRow(at: selectedIndexPath, animated: true)
         }
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        print("📱 View did appear - tableView frame: \(tableView.frame)")
+        print("📊 Posts count: \(posts.count)")
+    }
+    
     private func setupUI() {
+        print("🎨 Setting up UI")
         title = "Tumblr Feed"
         view.backgroundColor = .systemBackground
         
-        // Configure navigation bar
         navigationController?.navigationBar.prefersLargeTitles = true
         
-        // Setup activity indicator
         activityIndicator.hidesWhenStopped = true
         activityIndicator.style = .large
+        
+        // Ensure tableView exists
+        if tableView == nil {
+            print("❌ ERROR: tableView is nil! Check storyboard connections.")
+        } else {
+            print("✅ tableView is connected")
+        }
     }
     
     private func setupTableView() {
+        print("📋 Setting up table view")
+        
+        guard tableView != nil else {
+            print("❌ Cannot setup tableView - it's nil!")
+            return
+        }
+        
         tableView.dataSource = self
         tableView.delegate = self
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 200
         
-        // Register the custom cell (uncomment if you have a custom PostTableViewCell.xib)
-        let nib = UINib(nibName: "PostTableViewCell", bundle: nil)
-        tableView.register(nib, forCellReuseIdentifier: "PostCell")
+        // ONLY register programmatic cell - NO XIB LOADING
+        tableView.register(PostTableViewCell.self, forCellReuseIdentifier: "PostCell")
+        print("✅ Registered programmatic cell only")
         
         // Add refresh control
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(refreshPosts), for: .valueChanged)
         tableView.refreshControl = refreshControl
+        
+        print("✅ Table view setup complete")
     }
     
     @objc private func refreshPosts() {
@@ -67,15 +88,18 @@ class ViewController: UIViewController {
     }
     
     private func fetchPosts() {
+        print("🌐 Starting to fetch posts...")
         activityIndicator.startAnimating()
         
         let urlString = "https://api.tumblr.com/v2/blog/humansofnewyork.tumblr.com/posts/photo?api_key=\(apiKey)"
         
         guard let url = URL(string: urlString) else {
+            print("❌ Invalid URL")
             showError("Invalid URL")
             return
         }
         
+        print("📡 Making request to: \(urlString)")
         let request = URLRequest(url: url)
         
         URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
@@ -84,30 +108,67 @@ class ViewController: UIViewController {
                 self?.tableView.refreshControl?.endRefreshing()
                 
                 if let error = error {
+                    print("❌ Network error: \(error.localizedDescription)")
                     self?.showError("Network error: \(error.localizedDescription)")
                     return
                 }
                 
                 guard let data = data else {
+                    print("❌ No data received")
                     self?.showError("No data received")
                     return
                 }
                 
-                // Print raw JSON response for debugging
-                print("📦 Raw JSON:\n", String(data: data, encoding: .utf8) ?? "Invalid JSON")
+                print("📦 Received data: \(data.count) bytes")
+                
+                // DEBUG: Print the raw JSON response
+                if let jsonString = String(data: data, encoding: .utf8) {
+                    print("🔍 Raw JSON response (first 1000 chars): \(String(jsonString.prefix(1000)))")
+                }
                 
                 do {
                     let tumblrResponse = try JSONDecoder().decode(TumblrResponse.self, from: data)
+                    print("✅ Successfully decoded \(tumblrResponse.response.posts.count) posts")
                     self?.posts = tumblrResponse.response.posts
                     self?.tableView.reloadData()
+                    print("🔄 Table view reloaded")
                 } catch {
+                    print("❌ Decoding error: \(error)")
+                    
+                    // More detailed error information
+                    if let decodingError = error as? DecodingError {
+                        self?.printDecodingError(decodingError)
+                    }
+                    
                     self?.showError("Failed to decode response: \(error.localizedDescription)")
-                    print("❌ Decoding error: \(error)\n")
                 }
             }
         }.resume()
     }
-
+    
+    // Add this helper method to get more detailed decoding error info
+    private func printDecodingError(_ error: DecodingError) {
+        switch error {
+        case .dataCorrupted(let context):
+            print("🔍 Data corrupted: \(context.debugDescription)")
+            print("🔍 Coding path: \(context.codingPath)")
+            
+        case .keyNotFound(let key, let context):
+            print("🔍 Key '\(key.stringValue)' not found: \(context.debugDescription)")
+            print("🔍 Coding path: \(context.codingPath)")
+            
+        case .typeMismatch(let type, let context):
+            print("🔍 Type mismatch for type \(type): \(context.debugDescription)")
+            print("🔍 Coding path: \(context.codingPath)")
+            
+        case .valueNotFound(let type, let context):
+            print("🔍 Value not found for type \(type): \(context.debugDescription)")
+            print("🔍 Coding path: \(context.codingPath)")
+            
+        @unknown default:
+            print("🔍 Unknown decoding error: \(error)")
+        }
+    }
     
     private func showError(_ message: String) {
         let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
@@ -115,17 +176,11 @@ class ViewController: UIViewController {
         present(alert, animated: true)
     }
     
-    // MARK: - Navigation
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Check if the segue is the one leading to the DetailViewController
         if segue.identifier == "showDetail" {
-            // Get the destination view controller and cast it to DetailViewController
             if let detailVC = segue.destination as? DetailViewController {
-                // Get the index path of the selected row
                 if let indexPath = tableView.indexPathForSelectedRow {
-                    // Get the post associated with the selected row
                     let selectedPost = posts[indexPath.row]
-                    // Set the post property on the DetailViewController
                     detailVC.post = selectedPost
                 }
             }
@@ -136,16 +191,21 @@ class ViewController: UIViewController {
 // MARK: - Table View Data Source
 extension ViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        print("📊 numberOfRowsInSection called, returning: \(posts.count)")
         return posts.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        print("🔧 cellForRowAt called for row: \(indexPath.row)")
+        
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "PostCell", for: indexPath) as? PostTableViewCell else {
+            print("❌ Failed to dequeue PostTableViewCell")
             return UITableViewCell()
         }
         
         let post = posts[indexPath.row]
         cell.configure(with: post)
+        print("✅ Configured cell for row: \(indexPath.row)")
         
         return cell
     }
@@ -154,14 +214,11 @@ extension ViewController: UITableViewDataSource {
 // MARK: - Table View Delegate
 extension ViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        // Perform the segue when a row is selected
         performSegue(withIdentifier: "showDetail", sender: nil)
-        // tableView.deselectRow(at: indexPath, animated: true) // No need to deselect here, will do in viewWillAppear
         let post = posts[indexPath.row]
         print("Selected post: \(post.id)")
     }
 
-    // Add spacing between rows
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 120
     }
@@ -175,5 +232,4 @@ extension ViewController: UITableViewDelegate {
         spacer.backgroundColor = .clear
         return spacer
     }
-    
 }

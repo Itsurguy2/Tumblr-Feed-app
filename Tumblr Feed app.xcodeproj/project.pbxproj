@@ -15,8 +15,11 @@
 		C54371BE2E276D54002B63E7 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C54371BC2E276D54002B63E7 /* LaunchScreen.storyboard */; };
 		C54371C62E276E35002B63E7 /*  PostTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54371C52E276E35002B63E7 /*  PostTableViewCell.swift */; };
 		C54371C82E27704D002B63E7 /* Posts.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54371C72E27704D002B63E7 /* Posts.swift */; };
+		C5B8F3252E32D36400B39FFC /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = C5B8F3242E32D36400B39FFC /* Nuke */; };
+		C5B8F3272E32D36400B39FFC /* NukeExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = C5B8F3262E32D36400B39FFC /* NukeExtensions */; };
+		C5B8F3292E32D36400B39FFC /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = C5B8F3282E32D36400B39FFC /* NukeUI */; };
+		C5E673472E33F5300041ADDC /*  PostTableViewCell..xib in Resources */ = {isa = PBXBuildFile; fileRef = C5E673462E33F5300041ADDC /*  PostTableViewCell..xib */; };
 		C5F1E9E02E30BBC200DA0A84 /* DetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5F1E9DF2E30BBC200DA0A84 /* DetailViewController.swift */; };
-		C5F1E9E32E30BC5200DA0A84 /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = C5F1E9E22E30BC5200DA0A84 /* Nuke */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +33,7 @@
 		C54371BF2E276D54002B63E7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C54371C52E276E35002B63E7 /*  PostTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = " PostTableViewCell.swift"; sourceTree = "<group>"; };
 		C54371C72E27704D002B63E7 /* Posts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Posts.swift; sourceTree = "<group>"; };
+		C5E673462E33F5300041ADDC /*  PostTableViewCell..xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = " PostTableViewCell..xib"; sourceTree = "<group>"; };
 		C5F1E9DF2E30BBC200DA0A84 /* DetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -38,7 +42,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C5F1E9E32E30BC5200DA0A84 /* Nuke in Frameworks */,
+				C5B8F3292E32D36400B39FFC /* NukeUI in Frameworks */,
+				C5B8F3252E32D36400B39FFC /* Nuke in Frameworks */,
+				C5B8F3272E32D36400B39FFC /* NukeExtensions in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -74,6 +80,7 @@
 				C54371C52E276E35002B63E7 /*  PostTableViewCell.swift */,
 				C54371C72E27704D002B63E7 /* Posts.swift */,
 				C5F1E9DF2E30BBC200DA0A84 /* DetailViewController.swift */,
+				C5E673462E33F5300041ADDC /*  PostTableViewCell..xib */,
 			);
 			path = "Tumblr Feed app";
 			sourceTree = "<group>";
@@ -95,7 +102,9 @@
 			);
 			name = "Tumblr Feed app";
 			packageProductDependencies = (
-				C5F1E9E22E30BC5200DA0A84 /* Nuke */,
+				C5B8F3242E32D36400B39FFC /* Nuke */,
+				C5B8F3262E32D36400B39FFC /* NukeExtensions */,
+				C5B8F3282E32D36400B39FFC /* NukeUI */,
 			);
 			productName = "Tumblr Feed app";
 			productReference = C54371AE2E276D51002B63E7 /* Tumblr Feed app.app */;
@@ -126,7 +135,7 @@
 			);
 			mainGroup = C54371A52E276D51002B63E7;
 			packageReferences = (
-				C5F1E9E12E30BC5200DA0A84 /* XCRemoteSwiftPackageReference "Nuke" */,
+				C5FF53A32E32C868004438D8 /* XCRemoteSwiftPackageReference "Nuke" */,
 			);
 			productRefGroup = C54371AF2E276D51002B63E7 /* Products */;
 			projectDirPath = "";
@@ -145,6 +154,7 @@
 				C54371BE2E276D54002B63E7 /* LaunchScreen.storyboard in Resources */,
 				C54371BB2E276D54002B63E7 /* Assets.xcassets in Resources */,
 				C54371B92E276D51002B63E7 /* Main.storyboard in Resources */,
+				C5E673472E33F5300041ADDC /*  PostTableViewCell..xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -378,21 +388,31 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		C5F1E9E12E30BC5200DA0A84 /* XCRemoteSwiftPackageReference "Nuke" */ = {
+		C5FF53A32E32C868004438D8 /* XCRemoteSwiftPackageReference "Nuke" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/kean/Nuke.git";
 			requirement = {
-				branch = main;
-				kind = branch;
+				kind = exactVersion;
+				version = 11.0.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		C5F1E9E22E30BC5200DA0A84 /* Nuke */ = {
+		C5B8F3242E32D36400B39FFC /* Nuke */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = C5F1E9E12E30BC5200DA0A84 /* XCRemoteSwiftPackageReference "Nuke" */;
+			package = C5FF53A32E32C868004438D8 /* XCRemoteSwiftPackageReference "Nuke" */;
 			productName = Nuke;
+		};
+		C5B8F3262E32D36400B39FFC /* NukeExtensions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C5FF53A32E32C868004438D8 /* XCRemoteSwiftPackageReference "Nuke" */;
+			productName = NukeExtensions;
+		};
+		C5B8F3282E32D36400B39FFC /* NukeUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C5FF53A32E32C868004438D8 /* XCRemoteSwiftPackageReference "Nuke" */;
+			productName = NukeUI;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

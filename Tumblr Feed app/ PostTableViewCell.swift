@@ -7,7 +7,7 @@
 
 import Foundation
 import UIKit
-import Nuke // Import Nuke
+import Nuke
 
 class PostTableViewCell: UITableViewCell {
     @IBOutlet weak var postImageView: UIImageView!
@@ -21,12 +21,10 @@ class PostTableViewCell: UITableViewCell {
     }
     
     private func setupUI() {
-        // Configure image view
         postImageView.contentMode = .scaleAspectFill
         postImageView.clipsToBounds = true
         postImageView.layer.cornerRadius = 8
         
-        // Configure labels
         summaryLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         summaryLabel.numberOfLines = 3
         summaryLabel.textColor = .label
@@ -39,76 +37,46 @@ class PostTableViewCell: UITableViewCell {
         tagsLabel.numberOfLines = 2
     }
     
+    // Update your PostTableViewCell configure method to handle optionals
     func configure(with post: Post) {
-        // Set summary text - use caption if summary is empty
-        if !post.summary.isEmpty {
-            summaryLabel.text = post.summary
-        } else if let caption = post.caption, !caption.isEmpty {
-            summaryLabel.text = stripHTMLTags(from: caption)
-        } else {
-            summaryLabel.text = "No description available"
-        }
-        
-        // Set date
-        dateLabel.text = formatDate(post.date)
-        
-        // Set tags
-        if !post.tags.isEmpty {
-            tagsLabel.text = "#" + post.tags.joined(separator: " #")
-        } else if let caption = post.caption, !caption.isEmpty {
-            generateTags(from: caption) { [weak self] tags in
-                DispatchQueue.main.async {
-                    self?.tagsLabel.text = "#" + tags.joined(separator: " #")
-                }
+            if !post.summary.isEmpty {
+                summaryLabel.text = post.summary
+            } else if let caption = post.caption, !caption.isEmpty {
+                summaryLabel.text = stripHTMLTags(from: caption)
+            } else {
+                summaryLabel.text = "No description available"
             }
-        } else {
-            tagsLabel.text = ""
+            
+            dateLabel.text = formatDate(post.date)
+            
+            if !post.tags.isEmpty {
+                tagsLabel.text = "#" + post.tags.prefix(3).joined(separator: " #")
+            } else {
+                tagsLabel.text = "No tags"
+            }
+            
+            // Load image using Nuke - handle empty photos array
+            if let photo = post.photos.first, let url = URL(string: photo.originalSize.url) {
+                let request = ImageRequest(url: url)
+                ImagePipeline.shared.loadImage(with: request) { [weak self] result in
+                    DispatchQueue.main.async {
+                        switch result {
+                        case .success(let response):
+                            self?.postImageView.image = response.image
+                        case .failure(let error):
+                            print("❌ Image loading failed: \(error)")
+                            self?.postImageView.image = UIImage(systemName: "photo.fill")
+                        }
+                    }
+                }
+            } else {
+                postImageView.image = UIImage(systemName: "photo.fill")
+            }
         }
-        
-        // Load image using Nuke
-        print("📸 Post ID \(post.id) has \(post.photos.count) photos")
-
-        if let photo = post.photos.first {
-            let url = photo.originalSize.url
-            print("🔗 Attempting to load image from URL: \(url)")
-            // Use Nuke for image loading
-            Nuke.loadImage(with: URL(string: url)!, into: postImageView)
-        } else {
-            print("🚫 No photos found for Post ID \(post.id)")
-            postImageView.image = UIImage(systemName: "photo.fill") // fallback icon
-        }
-    }
     
     private func stripHTMLTags(from string: String) -> String {
         return string.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression, range: nil)
     }
-    
-    // Remove the manual loadImage function if you're now using Nuke.
-    // private func loadImage(from urlString: String) {
-    //     postImageView.image = UIImage(systemName: "photo") // Reset
-    //
-    //     guard let url = URL(string: urlString) else {
-    //         print("❌ Invalid URL: \(urlString)")
-    //         return
-    //     }
-    //
-    //     URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
-    //         if let error = error {
-    //             print("❌ Error loading image: \(error.localizedDescription)")
-    //             return
-    //         }
-    //
-    //         guard let data = data, let image = UIImage(data: data) else {
-    //             print("⚠️ No image data received or failed to convert to UIImage.")
-    //             return
-    //         }
-    //
-    //         DispatchQueue.main.async {
-    //             self?.postImageView.image = image
-    //         }
-    //     }.resume()
-    // } 
-
     
     private func formatDate(_ dateString: String) -> String {
         let formatter = DateFormatter()
@@ -124,18 +92,15 @@ class PostTableViewCell: UITableViewCell {
     }
     
     private func generateTags(from caption: String, completion: @escaping ([String]) -> Void) {
-        // This is a placeholder — you'd replace this with a real AI call
-        // Simulate tag generation based on keywords in caption
-        let keywords = ["people", "story", "love", "city", "family"]
+        let keywords = ["people", "story", "love", "city", "family", "street", "newyork"]
         let lowercased = caption.lowercased()
-        
         let matched = keywords.filter { lowercased.contains($0) }
         completion(matched.isEmpty ? ["untagged"] : matched)
     }
-
     
     override func prepareForReuse() {
         super.prepareForReuse()
+        // Reset image to placeholder
         postImageView.image = UIImage(systemName: "photo")
         summaryLabel.text = ""
         dateLabel.text = ""
