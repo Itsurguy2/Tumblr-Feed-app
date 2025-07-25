@@ -80,7 +80,7 @@
                                             <outlet property="postImageView" destination="iMN-8B-E4s" id="0XN-BK-FLR"/>
                                             <outlet property="summaryLabel" destination="Bnp-US-Wds" id="oXQ-DS-zFd"/>
                                             <outlet property="tagsLabel" destination="oJC-I9-lyM" id="Um4-rD-eKd"/>
-                                            <segue destination="gKT-qG-tJZ" kind="show" id="hII-S9-Ko6"/>
+                                            <segue destination="gKT-qG-tJZ" kind="show" identifier="showDetail" id="hII-S9-Ko6"/>
                                         </connections>
                                     </tableViewCell>
                                 </prototypes>

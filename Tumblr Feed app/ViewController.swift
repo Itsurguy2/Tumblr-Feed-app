@@ -18,6 +18,9 @@ class ViewController: UIViewController {
     
     private var posts: [Post] = []
     private let apiKey = "mu07QNnIbkaqlpUZIepDPeclEhzQDGkURRcFs4AxEZIeNac35n"
+    private var currentOffset: Int = 0 // For pagination
+    private var isLoadingNewPosts = false
+    private var allFetchedPosts: [Post] = [] // Store all posts we've fetched
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -71,12 +74,10 @@ class ViewController: UIViewController {
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 200
         
-        // ONLY register programmatic cell - NO XIB LOADING
-        tableView.register(PostTableViewCell.self, forCellReuseIdentifier: "PostCell")
-        print("✅ Registered programmatic cell only")
-        
-        // Add refresh control
+        // Add refresh control with custom styling
         let refreshControl = UIRefreshControl()
+        refreshControl.attributedTitle = NSAttributedString(string: "Pull to refresh posts...")
+        refreshControl.tintColor = .systemBlue
         refreshControl.addTarget(self, action: #selector(refreshPosts), for: .valueChanged)
         tableView.refreshControl = refreshControl
         
@@ -84,18 +85,40 @@ class ViewController: UIViewController {
     }
     
     @objc private func refreshPosts() {
-        fetchPosts()
+        print("🔄 User pulled to refresh - fetching different posts")
+        fetchPosts(isRefresh: true)
     }
     
-    private func fetchPosts() {
-        print("🌐 Starting to fetch posts...")
-        activityIndicator.startAnimating()
+    private func fetchPosts(isRefresh: Bool = false) {
+        guard !isLoadingNewPosts else {
+            print("⏳ Already loading posts, skipping request")
+            return
+        }
         
-        let urlString = "https://api.tumblr.com/v2/blog/humansofnewyork.tumblr.com/posts/photo?api_key=\(apiKey)"
+        isLoadingNewPosts = true
+        print("🌐 Starting to fetch posts... (isRefresh: \(isRefresh))")
+        
+        if !isRefresh {
+            activityIndicator.startAnimating()
+        }
+        
+        // Build URL with different strategies for refresh vs initial load
+        var urlString = "https://api.tumblr.com/v2/blog/humansofnewyork.tumblr.com/posts/photo?api_key=\(apiKey)&limit=20"
+        
+        if isRefresh {
+            // For refresh, get posts from a different offset to show different content
+            let randomOffset = Int.random(in: 0...100) // Random offset for variety
+            urlString += "&offset=\(randomOffset)"
+            print("🎲 Using random offset: \(randomOffset) for variety")
+        } else {
+            // For initial load, use current offset
+            urlString += "&offset=\(currentOffset)"
+        }
         
         guard let url = URL(string: urlString) else {
             print("❌ Invalid URL")
             showError("Invalid URL")
+            isLoadingNewPosts = false
             return
         }
         
@@ -104,6 +127,7 @@ class ViewController: UIViewController {
         
         URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             DispatchQueue.main.async {
+                self?.isLoadingNewPosts = false
                 self?.activityIndicator.stopAnimating()
                 self?.tableView.refreshControl?.endRefreshing()
                 
@@ -121,17 +145,31 @@ class ViewController: UIViewController {
                 
                 print("📦 Received data: \(data.count) bytes")
                 
-                // DEBUG: Print the raw JSON response
-                if let jsonString = String(data: data, encoding: .utf8) {
-                    print("🔍 Raw JSON response (first 1000 chars): \(String(jsonString.prefix(1000)))")
-                }
-                
                 do {
                     let tumblrResponse = try JSONDecoder().decode(TumblrResponse.self, from: data)
-                    print("✅ Successfully decoded \(tumblrResponse.response.posts.count) posts")
-                    self?.posts = tumblrResponse.response.posts
+                    let newPosts = tumblrResponse.response.posts
+                    print("✅ Successfully decoded \(newPosts.count) posts")
+                    
+                    if isRefresh {
+                        // For refresh, show different posts
+                        self?.posts = newPosts
+                        print("🔄 Refreshed with \(newPosts.count) different posts")
+                        
+                        // Add to our collection of all fetched posts
+                        self?.allFetchedPosts.append(contentsOf: newPosts)
+                        
+                        // Show success message
+                        self?.showRefreshSuccess(count: newPosts.count)
+                    } else {
+                        // For initial load
+                        self?.posts = newPosts
+                        self?.allFetchedPosts = newPosts
+                        self?.currentOffset += newPosts.count
+                    }
+                    
                     self?.tableView.reloadData()
-                    print("🔄 Table view reloaded")
+                    print("🔄 Table view reloaded with \(self?.posts.count ?? 0) posts")
+                    
                 } catch {
                     print("❌ Decoding error: \(error)")
                     
@@ -176,6 +214,51 @@ class ViewController: UIViewController {
         present(alert, animated: true)
     }
     
+    private func showRefreshSuccess(count: Int) {
+        // Create a subtle success indicator
+        let successView = UIView()
+        successView.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.9)
+        successView.layer.cornerRadius = 20
+        successView.translatesAutoresizingMaskIntoConstraints = false
+        
+        let label = UILabel()
+        label.text = "✅ Loaded \(count) different posts"
+        label.textColor = .white
+        label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        
+        successView.addSubview(label)
+        view.addSubview(successView)
+        
+        NSLayoutConstraint.activate([
+            successView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            successView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            successView.heightAnchor.constraint(equalToConstant: 40),
+            successView.widthAnchor.constraint(greaterThanOrEqualToConstant: 200),
+            
+            label.centerXAnchor.constraint(equalTo: successView.centerXAnchor),
+            label.centerYAnchor.constraint(equalTo: successView.centerYAnchor),
+            label.leadingAnchor.constraint(greaterThanOrEqualTo: successView.leadingAnchor, constant: 16),
+            label.trailingAnchor.constraint(lessThanOrEqualTo: successView.trailingAnchor, constant: -16)
+        ])
+        
+        // Animate the success message
+        successView.alpha = 0
+        successView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+        
+        UIView.animate(withDuration: 0.3, animations: {
+            successView.alpha = 1
+            successView.transform = .identity
+        }) { _ in
+            UIView.animate(withDuration: 0.3, delay: 2.0, animations: {
+                successView.alpha = 0
+                successView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+            }) { _ in
+                successView.removeFromSuperview()
+            }
+        }
+    }
+    
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "showDetail" {
             if let detailVC = segue.destination as? DetailViewController {
@@ -214,9 +297,10 @@ extension ViewController: UITableViewDataSource {
 // MARK: - Table View Delegate
 extension ViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        performSegue(withIdentifier: "showDetail", sender: nil)
+        tableView.deselectRow(at: indexPath, animated: true)
         let post = posts[indexPath.row]
         print("Selected post: \(post.id)")
+        performSegue(withIdentifier: "showDetail", sender: indexPath)
     }
 
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
@@ -232,4 +316,4 @@ extension ViewController: UITableViewDelegate {
         spacer.backgroundColor = .clear
         return spacer
     }
-}
+}   
